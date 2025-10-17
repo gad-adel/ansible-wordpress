@@ -1,0 +1,37 @@
+### 1. Cloner le projet
+
+Clonez ce dépôt sur votre machine locale :
+```bash
+git clone <url_du_dépôt>
+cd <nom_du_dossier>
+
+Mettre dans le fichier inventory:
+
+[my_vm]
+<adresse_ip> ansible_ssh_user=<utilisateur> ansible_ssh_private_key_file=<chemin_vers_votre_clé_privée>
+
+### 2. Lancer le playbook
+
+    ansible-playbook -i inventory wordpress.yml
+
+### 3. Commandes exécutées dans la VM
+
+    1/ installation de PyMySQL pour Mariadb:
+        sudo apt update
+        sudo apt install python3-pymysql -y 
+        sudo mysql -u root -p
+
+    2/ création de db et d'user
+        CREATE DATABASE wordpress;
+        CREATE USER 'wp_user'@'localhost' IDENTIFIED BY 'wp_password';
+        GRANT ALL PRIVILEGES ON wordpress.* TO 'wp_user'@'localhost';
+        FLUSH PRIVILEGES;
+
+    3/ redemarrer les services
+        sudo systemctl restart mariadb
+        sudo systemctl restart apache2
+
+
+https://www.digitalocean.com/community/tutorials/how-to-use-ansible-to-install-and-set-up-wordpress-with-lamp-on-ubuntu-18-04
+
+https://gandalsmart.com/deployer-wordpress-avec-ansible-sur-ubuntu/

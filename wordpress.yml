@@ -1,0 +1,115 @@
+---
+- name: Install WordPress with MariaDB
+  hosts: my_vm
+  become: true
+  tasks:
+    # 1. Mettre à jour les paquets
+    - name: Update apt packages
+      apt:
+        update_cache: yes
+
+    # 2. Installer les dépendances nécessaires
+    - name: Install required packages
+      apt:
+        name:
+          - apache2
+          - php
+          - php-mysql
+          - mariadb-server
+          - mariadb-client
+          - curl
+          - unzip
+        state: present
+
+    # 3. Démarrer et activer Apache et MariaDB
+    - name: Ensure Apache is running
+      service:
+        name: apache2
+        state: started
+        enabled: true
+
+    - name: Ensure MariaDB is running
+      service:
+        name: mariadb
+        state: started
+        enabled: true
+
+    # 4. Configurer MariaDB
+    - name: Secure MariaDB installation - Remove anonymous users
+      mysql_user:
+        name: ''
+        host_all: true
+        state: absent
+        login_user: root
+        login_password: your_root_password
+
+    - name: Secure MariaDB installation - Remove test database
+      mysql_db:
+        name: test
+        state: absent
+        login_user: root
+        login_password: your_root_password
+        login_host: localhost
+
+    - name: Secure MariaDB installation - Disallow root login remotely
+      mysql_user:
+        name: root
+        host: '%'
+        state: absent
+        login_user: root
+        login_password: your_root_password
+        login_host: localhost
+
+    - name: Set root password for MariaDB
+      mysql_user:
+        name: root
+        password: your_root_password
+        login_user: root
+        login_password: your_root_password
+        login_host: localhost
+
+    # 5. Télécharger et installer WordPress
+    - name: Download WordPress
+      get_url:
+        url: https://wordpress.org/latest.zip
+        dest: /tmp/wordpress.zip
+
+    - name: Extract WordPress
+      unarchive:
+        src: /tmp/wordpress.zip
+        dest: /var/www/html/
+        remote_src: yes
+
+    - name: Set permissions for WordPress
+      file:
+        path: /var/www/html/wordpress
+        state: directory
+        owner: www-data
+        group: www-data
+        mode: '0755'
+        recurse: yes
+
+    # 6. Configurer WordPress
+    - name: Create wp-config.php
+      copy:
+        dest: /var/www/html/wordpress/wp-config.php
+        content: |
+          <?php
+          define('DB_NAME', 'wordpress');
+          define('DB_USER', 'wp_user');
+          define('DB_PASSWORD', 'wp_password');
+          define('DB_HOST', 'localhost');
+          define('DB_CHARSET', 'utf8');
+          define('DB_COLLATE', '');
+          $table_prefix = 'wp_';
+          define('WP_DEBUG', false);
+          if ( !defined('ABSPATH') ) {
+              define('ABSPATH', dirname(__FILE__) . '/');
+          }
+          require_once(ABSPATH . 'wp-settings.php');
+
+    # 7. Redémarrer Apache
+    - name: Restart Apache
+      service:
+        name: apache2
+        state: restarted

@@ -1,0 +1,2 @@
+[my_vm]
+91.134.52.196 ansible_ssh_user=agadri ansible_ssh_private_key_file=/Users/adilgadri/.ssh/id_ed25519
