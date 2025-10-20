@@ -106,7 +106,14 @@
           if ( !defined('ABSPATH') ) {
               define('ABSPATH', dirname(__FILE__) . '/');
           }
-          require_once(ABSPATH . 'wp-settings.php');
+          require_once(ABSPATH . 'wp-settings.php')
+
+    - name: Planifier le script de backup avec cron
+      cron:
+        name: "Backup de la base de données"
+        minute: "0"
+        hour: "2"
+        job: "/usr/local/bin/backup_database.sh >> /var/log/backup_database.log 2>&1"
 
     # 7. Redémarrer Apache
     - name: Restart Apache
